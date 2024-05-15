@@ -41,7 +41,7 @@ Ratatoskr is a powerful tool designed to streamline information retrieval and kn
    - Update `config.yaml` with your Elasticsearch connection details, Ollama model settings, and other preferences.
 5. **Start the Server:**
    ```bash
-   python ratatoskr/main.py
+   python src/main.py
    ```
 
 ## API Endpoints
