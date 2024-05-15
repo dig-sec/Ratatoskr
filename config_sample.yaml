@@ -1,0 +1,19 @@
+ollama:
+  url: http://127.0.0.1:11434/api/generate
+  base_url: http://localhost:11434
+  model: llama3
+
+ratatoskr:
+  index: ratatoskr
+
+elastic:
+  http_auth:
+    - "elastic"
+    - "password"
+  hosts: https://elasticsearch:9200
+
+files:
+  upload: /upload
+
+rag_database:
+  index: rag_documents

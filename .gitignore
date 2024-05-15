@@ -1,0 +1,14 @@
+# Config with secrets
+config.yaml
+
+# Log 
+ratatoskr.log
+
+# Env
+.venv
+src/ratatoskr.egg-info
+__pycache__
+
+
+# Files
+upload/*
