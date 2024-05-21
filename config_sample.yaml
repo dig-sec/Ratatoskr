@@ -1,3 +1,7 @@
+allowed_api_keys:
+  - your_secret_api_key_1
+  - another_secret_api_key
+
 ollama:
   url: http://127.0.0.1:11434/api/generate
   base_url: http://localhost:11434
@@ -17,3 +21,7 @@ files:
 
 rag_database:
   index: rag_documents
+
+ollama:
+  models:
+    model1: LLama3

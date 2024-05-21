@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+PyYAML
+langchain
+langchain_community
+sentence-transformers
+elasticsearch>=8.0.0
+
+[dev]
+black
+isort
+ruff
+pytest
+mypy

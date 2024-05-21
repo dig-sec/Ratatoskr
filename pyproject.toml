@@ -5,7 +5,36 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ratatoskr"
 version = "0.1.0"
-dependencies = []  # List your project's dependencies here
+description = "A comprehensive information retrieval and knowledge management platform."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }  # Add your license file (e.g., LICENSE or MIT.txt)
+authors = [
+  { name = "pabi", email = "pubirgersson@gmail.com" },  
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+]
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]", 
+    "PyYAML",
+    "langchain",
+    "langchain_community",
+    "sentence-transformers",
+    "elasticsearch>=8.0.0",
+]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "mypy", "black", "isort"]  # Dev dependencies
+dev = [
+    "black",
+    "isort",
+    "ruff",
+    "pytest",
+    "mypy",
+]

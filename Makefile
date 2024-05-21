@@ -1,9 +1,8 @@
-# Makefile for Ratatoskr Project
-
+# Makefile for Ratatoskr FastAPI Project
 VENV := .venv
 VENV_ACTIVATE := . $(VENV)/bin/activate
 
-# Virtual environment setup 
+# --- Environment Setup ---
 .PHONY: venv
 venv: $(VENV)/bin/activate
 
@@ -11,36 +10,37 @@ $(VENV)/bin/activate: requirements.txt
 	test -d $(VENV) || python3 -m venv $(VENV)
 	$(VENV_ACTIVATE) && pip install -U pip wheel setuptools
 	$(VENV_ACTIVATE) && pip install -r requirements.txt
-	$(VENV_ACTIVATE) && python -m spacy download en_core_web_sm
 	touch $(VENV)/bin/activate
 
-# Project-specific commands
+# --- Installation ---
 .PHONY: install
 install: venv
-	$(VENV_ACTIVATE) && python -m pip install -e .
+	$(VENV_ACTIVATE) && pip install -e .[dev]
 
+# --- Linting and Formatting ---
 .PHONY: lint
 lint: venv
-	$(VENV_ACTIVATE) && ruff check . && mypy ratatoskr
+	$(VENV_ACTIVATE) && ruff check ratatoskr  # Check the ratatoskr directory
+	$(VENV_ACTIVATE) && mypy ratatoskr --ignore-missing-imports
 
 .PHONY: format
 format: venv
-	$(VENV_ACTIVATE) && black . && isort .
+	$(VENV_ACTIVATE) && black ratatoskr
+	$(VENV_ACTIVATE) && isort ratatoskr
 
+# --- Testing ---
 .PHONY: test
 test: venv
-	$(VENV_ACTIVATE) && pytest tests/
+	$(VENV_ACTIVATE) && pytest 
 
+# --- Running the Server ---
 .PHONY: run
 run: venv
-	$(VENV_ACTIVATE) && $(VENV)/bin/python src/main.py
+	$(VENV_ACTIVATE) && uvicorn ratatoskr.main:app --reload
 
+# --- Cleaning Up ---
 .PHONY: clean
 clean:
 	rm -rf $(VENV)
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
-
-.PHONY: docs
-docs: venv
-	$(VENV_ACTIVATE) && mkdocs serve  # Install mkdocs if needed

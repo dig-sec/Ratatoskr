@@ -1,31 +1,32 @@
-# Use a slimmer base image for reduced size
+# Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Set environment variables for non-interactive installations
+# Set environment variables
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-# Set the working directory in the container to /app
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy only necessary files, not the entire project (Improved)
+# Copy the requirements file
 COPY requirements.txt ./
 
-# Install dependencies before copying the rest of the project (Improved)
-# This allows for better caching during image builds
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN python -m spacy download en_core_web_sm
 
-# Copy the rest of your application code (Improved)
-COPY . .
+# Copy the project (with namespace)
+COPY ./ratatoskr ./ratatoskr
+COPY config.yaml ./
 
-# Set an optional environment variable for configuration (Optional)
+# Set an optional environment variable for configuration
 ARG RATATOSKR_CONFIG=/app/config.yaml
 ENV RATATOSKR_CONFIG=${RATATOSKR_CONFIG}
 
-# Expose the port your application will run on (If applicable)
-EXPOSE 6666
+# Expose the port your application will run on
+EXPOSE 8000
 
-# Set the command to run your application (Use a single entrypoint)
-CMD ["python", "main.py", "--config", "$RATATOSKR_CONFIG"] 
+# Start the FastAPI application with Uvicorn (using the namespace)
+CMD ["uvicorn", "ratatoskr.main:app", "--host", "0.0.0.0", "--port", "6666"]

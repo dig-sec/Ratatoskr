@@ -1,3 +1,29 @@
+Metadata-Version: 2.1
+Name: ratatoskr
+Version: 0.1.0
+Summary: A comprehensive information retrieval and knowledge management platform.
+Author-email: pabi <pubirgersson@gmail.com>
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: FastAPI
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi
+Requires-Dist: uvicorn[standard]
+Requires-Dist: PyYAML
+Requires-Dist: langchain
+Requires-Dist: langchain_community
+Requires-Dist: sentence-transformers
+Requires-Dist: elasticsearch>=8.0.0
+Provides-Extra: dev
+Requires-Dist: black; extra == "dev"
+Requires-Dist: isort; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+
 # Ratatoskr: A Comprehensive Information Retrieval and Knowledge Management Platform
 
 ## Overview

@@ -1,22 +1,15 @@
 # Core Web Framework
-Flask
+fastapi
+
+# Asynchronous Server Gateway Interface (ASGI)
+uvicorn[standard]  # For running FastAPI
 
 # Configuration Management
 PyYAML
 
-# Natural Language Processing
-spacy>=3.0.0
-
 # LangChain and Extensions
-langchain
 langchain_community
 sentence-transformers
 
 # Elasticsearch Integration
-elasticsearch>=8.0.0 
-
-# Web Scraping and Text Processing
-beautifulsoup4
-
-# Machine Learning
-scikit-learn
+elasticsearch>=8.0.0
