@@ -1,108 +1,71 @@
-"""
-Start thread to load uploaded file in to rag database.
-One as knowledge of thruth and one as a summary sparce index summary.
-then remove the file
-
-Same for url link
-"""
+import os
 from concurrent.futures import ThreadPoolExecutor
 from langchain_community.document_loaders import (
-    CSVLoader, 
-    UnstructuredHTMLLoader, 
-    JSONLoader,
-    UnstructuredMarkdownLoader,
-    PyPDFLoader,
-    TextLoader,
-    WebBaseLoader
+    CSVLoader, UnstructuredHTMLLoader, JSONLoader, UnstructuredMarkdownLoader,
+    PyPDFLoader, TextLoader, WebBaseLoader
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import json
-from pathlib import Path
-from langchain_community.vectorstores import ElasticsearchStore
-from langchain_community.embeddings import OllamaEmbeddings
-import logging
-logging.basicConfig(level=logging.ERROR, filemode='a', filename='ratatoskr.log', format='%(asctime)s - %(levelname)s - %(message)s - Source: rag_handler.py')
+from elasticsearch_integration import ElasticsearchIntegration
+
+from logging_config import logger
+from config_utils import load_config
 
 class RagProcessor:
-    def __init__(self, config_file: dict, max_threads=4):
+    def __init__(self, config_file='config.yaml', max_threads=4):
         self.max_threads = max_threads
-        self.config = config_file
-        self.ollama_embedding = OllamaEmbeddings(base_url=self.config['ollama']['base_url'], model=self.config['ollama']['model'])
+        self.config = load_config(config_file)
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=20)
 
     def process_file(self, file_path: str):
         try:
-            # Load the file
-            data = None
-            if file_path.endswith('.csv'):
-                loader = CSVLoader(file_path)
-                data = loader.load_and_split()
-            elif file_path.endswith('.html'):
-                loader = UnstructuredHTMLLoader(file_path)
-                data = loader.load()
-            elif file_path.endswith('.json'):
-                loader = JSONLoader(file_path)
-                data = json.loads(Path(file_path).read_text())
-            elif file_path.endswith('.md'):
-                loader = UnstructuredMarkdownLoader(file_path)
-                data = loader.load()
-            elif file_path.endswith('.pdf'):
-                loader = PyPDFLoader(file_path)
-                data = loader.load_and_split()
-            elif file_path.endswith('.txt'):
-                loader = TextLoader(file_path)
-                data = loader.load()
+            loader = self._get_loader(file_path)
+            documents = loader.load()
+            all_splits = self.text_splitter.split_documents(documents)
 
-            # Splitter
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=20)
-            all_splits = text_splitter.split_documents(data)
+            # Extract metadata (source, optional title, etc.)
+            metadatas = [{ "source": file_path }] * len(all_splits)
 
-            # Parse filename from file_path
-            # filename = file_path.split('/')[-1]
+            # Store documents and vectors in Elasticsearch
+            elastic_connection = ElasticsearchIntegration(self.config)
+            elastic_connection.extract_and_store_documents_and_vectors(all_splits, metadatas) 
 
-            db = ElasticsearchStore.from_documents(
-                all_splits,
-                self.ollama_embedding,
-                es_url=self.config['elastic']['hosts'],
-                index_name=self.config['ratatoskr']['index'],
-                es_user=self.config['elastic']['http_auth'][0],
-                es_password=self.config['elastic']['http_auth'][1]
-            )
-
-            db.client.indices.refresh(index=self.config['elastic']['index'])
-
+            logger.info(f"Processed and stored file: {file_path}")
+            
+            # Remove file after processing
+            os.remove(file_path)
         except Exception as e:
-            print("Error processing file: " + file_path + " Error: " + str(e))
+            logger.error(f"Error processing file '{file_path}': {e}")
 
-    # def process_files(self, list_of_files):
-    #     threads = []
-    #     with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-    #         for file_path in tqdm(list_of_files):
-    #             try:
-    #                 t = executor.submit(self.process_file, file_path)
-    #                 threads.append(t)
-    #             except Exception as e:
-    #                 print("Error processing file: " + file_path + " Error: " + str(e))
-
-    #     # Wait for all threads to finish
-    #     for t in threads:
-    #         t.result()
-
+    def process_files(self, list_of_files: list):
+        """Processes multiple files concurrently."""
+        with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+            futures = [executor.submit(self.process_file, file_path) for file_path in list_of_files]
+            for future in futures:
+                future.result()
 
     def process_url(self, url: str):
-        loader = WebBaseLoader(url)
-        data = loader.load()
+        try:
+            loader = WebBaseLoader(url)
+            documents = loader.load()
+            all_splits = self.text_splitter.split_documents(documents)
+            metadatas = [{ "source": url }] * len(all_splits)
 
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=20)
-        all_splits = text_splitter.split_documents(data)
+            # Store in Elasticsearch
+            elastic_connection = ElasticsearchIntegration(self.config)
+            elastic_connection.extract_and_store_documents_and_vectors(all_splits, metadatas)
 
-        db = ElasticsearchStore.from_documents(
-            all_splits,
-            self.ollama_embedding,
-            es_url=self.config['elastic']['hosts'],
-            index_name=self.config['ratatoskr']['index'],
-            es_user=self.config['elastic']['http_auth'][0],
-            es_password=self.config['elastic']['http_auth'][1]
-        )
+            logger.info(f"Processed and stored URL: {url}")
+        except Exception as e:
+            logger.error(f"Error processing URL '{url}': {e}")
 
-        db.client.indices.refresh(index=self.config['ratatoskr']['index'])
-
+    def _get_loader(self, file_path: str):
+        ext = file_path.split('.')[-1].lower()
+        loaders = {
+            'csv': CSVLoader,
+            'html': UnstructuredHTMLLoader,
+            'json': JSONLoader,
+            'md': UnstructuredMarkdownLoader,
+            'pdf': PyPDFLoader,
+            'txt': TextLoader,
+        }
+        return loaders.get(ext, TextLoader)(file_path) 

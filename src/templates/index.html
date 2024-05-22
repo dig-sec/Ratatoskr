@@ -15,17 +15,7 @@
     </div>
     <div class="container">
         <div class="interaction-box">
-            <!-- <div class="header">
-                <img src="{{ url_for('static', filename='images/ratatoskr.jpg') }}" alt="Image" style="width: 15%; height: 15%; border-radius: 50%;">
-                <h1>Ratatoskr</h1>
-            </div> -->
-            <!-- <div class="readme">
-                <h3>Guide</h3>
-                <p>Query different assets, such as Wikipedia, databases, and the internet. Enrich the results with LLMs to generate more informative and comprehensive responses.</p>
-            </div> -->
             <form class="chat-form">
-                <h3 style="color:#66c2ff">Dialog</h3>
-                <br>
                 <!-- User Information -->
                 <fieldset class="input-group">
                     <legend>User Information</legend>
@@ -47,36 +37,39 @@
 
                 <!-- Model Selection -->
                 <fieldset class="input-group">
-                    <legend>Model Selection</legend>
+                    <legend>LLM Model Selection</legend>
                     <div>
                         <select id="model" name="model">
-			                <option value="llama3:70b">llama3:70b</option>
-                            <option value="llama3">llama3</option>
-			                <option value="dolphin-mixtral">dolphin-mixtral</option>
-                            <option value="mistral:latest">mistral:latest</option>
-                            <option value="llama2:13b">llama2:13b</option>
-                            <option value="codellama:13b">codellama:13b</option>
+                            {% for model_id, model_name in model_options.items() %} 
+                                <option value="{{ model_name }}">{{ model_name }}</option> 
+                            {% endfor %}
                         </select>
                     </div>
                 </fieldset>
 
-                <!-- Query Enrichment Features -->
+                <!-- Mode -->
                 <fieldset class="input-group">
-                    <legend>Enable or disable enrichment features for query</legend>
+                    <legend>Mode:</legend>
+                    <select id="mode" name="mode">
+                        <option value="dialog">Dialog</option>
+                        <option value="vector">Vector search</option>
+                        <option value="string">String search</option>
+                    </select>
+                </fieldset>
+
+                <!-- Query Options -->
+                <fieldset class="input-group">
+                    <legend>Query Options</legend>
                     <div class="checkbox-grid">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="use_rag_database" name="use_rag_database"><!--checked-->
-                            <label for="database">Use local RAG database.</label>
+                        <div class="user-info-item">
+                            <label for="use_rag_database">Dialog: Use local RAG database</label>
+                            <input type="checkbox" id="use_rag_database" name="use_rag_database">
                         </div>
-                        <!-- <div class="checkbox-item">
-                            <input type="checkbox" id="internet" name="internet">
-                            <label for="internet">Internet</label>
-                        </div> -->
-                        <!-- <div class="checkbox-item">
-                            <input type="checkbox" id="wikipedia" name="wikipedia">
-                            <label for="wikipedia">Wikipedia</label>
-                        </div> -->
-                    </div>
+                        <div class="user-info-item">
+                            <label for="max-results">Search: Max Results</label>
+                            <input type="number" id="max-results" name="max-results" value="10">
+                        </div>
+                    </div> 
                 </fieldset>
 
                 <!-- Query Input and Output -->
@@ -86,46 +79,18 @@
                         <label for="query">Query:</label>
                         <textarea id="query" name="query" rows="10"></textarea>
                     </div>
-                    <div id="loading" style="display: none; text-align: center;"><img src="{{ url_for('static', filename='images/ratatoskr_loading.gif') }}" alt="Image" width="60" height="35" style="border-radius: 50%;"></div>
+                    <div id="loading" style="display: none; text-align: center;"><img
+                            src="{{ url_for('static', filename='images/ratatoskr_loading.gif') }}" alt="Image"
+                            width="60" height="35" style="border-radius: 50%;"></div>
                     <div>
                         <label for="response">Response:</label>
                         <textarea id="response" name="response" rows="10" readonly></textarea>
                     </div>
                 </fieldset>
 
-                <div class="input-group">
+                <div class="user-info-item">
                     <input type="button" value="Submit" onclick="sendQuery()">
-                </div>
-            </form>
-        </div>
-
-        <!-- Query Only RAG Section -->
-        <div class="interaction-box">
-            <form class="query-rag-form">
-                <h3 style="color:#66c2ff">Query Only RAG</h3>
-                <br>
-                
-                <!-- Query Input -->
-                <fieldset class="input-group">
-                    <legend>Query</legend>
-                    <div>
-                        <label for="query-rag">Query:</label>
-                        <textarea id="query-rag" name="query-rag" rows="10"></textarea>
-                    </div>
-                </fieldset>
-                
-                <!-- Query Output -->
-                <fieldset class="input-group">
-                    <legend>Query Output</legend>
-                    <div>
-                        <label for="response-rag">Response:</label>
-                        <textarea id="response-rag" name="response-rag" rows="10" readonly></textarea>
-                    </div>
-                </fieldset>
-
-                <!-- Submit Query Button -->
-                <div class="input-group">
-                    <input type="button" value="Submit Query" onclick="sendQueryRAG()">
+                    <input type="button" value="Clear" onclick="clearResponse()">
                 </div>
             </form>
         </div>
@@ -133,27 +98,29 @@
         <!-- Summarize based on source -->
         <div class="interaction-box">
             <form>
-              <h3 style="color:#66c2ff">Summarize based on sources</h3>
+                <h3 style="color:#66c2ff">Summarize based on sources</h3>
                 <br>
-              <div class="source-summarization">
-                <fieldset class="input-group">
-                  <legend>Define Sources</legend>
-                  <div class="source-definition-and-button" style="display: flex; align-items: center;">
-                    <label for="sources" style="margin-right: 10px;">Sources:</label>
-                    <input type="text" id="sources" name="sources" placeholder="Enter comma-separated source files or URLs" style="flex-grow: 1; margin-right: 10px;" />
-                  </div>
-                    <label for="text-summary" style="margin-right: 10px;">Text Summary:</label>
-                    <textarea id="text-summary" name="text-summary" rows="10"></textarea>
-                  <div class="input-group">
-                    <!--<input type="button" value="Summarize Sources" onclick="summarizeSources()">-->
-                  </div>
-                </fieldset>
-              </div>
+                <div class="source-summarization">
+                    <fieldset class="input-group">
+                        <legend>Define Sources</legend>
+                        <div class="source-definition-and-button" style="display: flex; align-items: center;">
+                            <label for="sources" style="margin-right: 10px;">Sources:</label>
+                            <input type="text" id="sources" name="sources"
+                                placeholder="Enter comma-separated source files or URLs"
+                                style="flex-grow: 1; margin-right: 10px;" />
+                        </div>
+                        <label for="text-summary" style="margin-right: 10px;">Text Summary:</label>
+                        <textarea id="text-summary" name="text-summary" rows="10"></textarea>
+                        <div class="input-group">
+                            <input type="button" value="Summarize Sources" onclick="summarizeSources()">
+                        </div>
+                    </fieldset>
+                </div>
             </form>
-          </div>
-      
+        </div>
+
         <!-- Indexing Section -->
-        <!-- <div class="interaction-box">
+        <div class="interaction-box">
             <form>
                 <h3 style="color:#66c2ff">Index new data to local retrieval-augmented generation</h3>
                 <div class="upload-link-section">
@@ -175,7 +142,8 @@
                     </fieldset>
                 </div>
             </form>
-        </div> -->
+        </div>
+    </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/ratatoskr.js') }}"></script>

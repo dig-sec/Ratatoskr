@@ -10,6 +10,7 @@ spacy>=3.0.0
 # LangChain and Extensions
 langchain
 langchain_community
+langchain-elasticsearch
 sentence-transformers
 
 # Elasticsearch Integration

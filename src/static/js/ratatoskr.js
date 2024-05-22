@@ -1,158 +1,165 @@
+// UUID Generation 
 function generateUUID() {
-    let d = new Date().getTime();
-    let uuid = 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        let r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
-        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-    return uuid;
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
 }
 
+// Initial UUID Setting
 function setUUID() {
-    let uuid = generateUUID();
-    document.getElementById('session').value = uuid;
+    document.getElementById('session').value = generateUUID();
 }
 
-window.onload = setUUID;
-
+window.addEventListener('load', setUUID);
 document.getElementById('reset-uuid-button').addEventListener('click', setUUID);
 
-let intervalId;
+// ---- Chat Interface (Main Query) ----
 
-function fetchQueryStatus(query_id) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', `/api/query_status?query_id=${query_id}`);
-    xhr.onload = () => {
-        if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
-            const status = data.status;
-            const response = data.response;
-            if (status === "completed") {
-                const responseElement = document.getElementById('response');
-                const newText = document.createTextNode(response + '\n\n');
-                responseElement.insertBefore(newText, responseElement.firstChild);
-                document.getElementById('loading').style.display = 'none';
-                clearInterval(intervalId);
+let intervalId; // For polling query status
+
+async function sendQuery() {
+    const mode = document.getElementById('mode').value;
+
+    if (mode === 'dialog') {
+        document.getElementById('loading').style.display = 'block';
+        const formData = {
+            user: document.getElementById('user').value,
+            session: document.getElementById('session').value,
+            model: document.getElementById('model').value,
+            query: document.getElementById('query').value,
+            use_rag_database: document.getElementById('use_rag_database').checked,
+        };
+
+        try {
+            const response = await fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+            const query_id = data.query_id;
+
+            intervalId = setInterval(() => fetchQueryStatus(query_id), 10000);
+
+        } catch (error) {
+            handleError('Error sending query:', error, 'response');
+        }
+    } else {
+        const maxResults = parseInt(document.getElementById('max-results').value) || 10;
+        const queryText = document.getElementById('query').value;
+
+        try {
+            const response = await fetch(`/api/${mode}_search`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: queryText,
+                    max_results: maxResults
+                })
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+            let responseText = '';
+            if (mode === 'vector') {
+                data.forEach(result => {
+                    responseText += 'metadata_source: ' + result.metadata_source + '\n' + 'page_content: ' + result.page_content + '\n\n';
+                });
+            } else {
+                responseText = JSON.stringify(data, null, 2);
             }
+            updateResponseArea('response', responseText);
+
+        } catch (error) {
+            handleError('Error sending query:', error, 'response');
         }
-    };
-    xhr.send();
+    }
 }
 
-function sendQuery() {
-    document.getElementById('loading').style.display = 'block';
-
-    const formData = {
-        user: document.getElementById('user').value,
-        session: document.getElementById('session').value,
-        model: document.getElementById('model').value,
-        query: document.getElementById('query').value,
-        // wikipedia: document.getElementById('wikipedia').checked,
-        use_rag_database: document.getElementById('use_rag_database').checked,
-        // internet: document.getElementById('internet').checked,
-    };
-
-    fetch('/api/query', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        const query_id = data.query_id;
-
-        intervalId = setInterval(() => {
-            fetchQueryStatus(query_id);
-        }, 10000);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('loading').style.display = 'none';
-    });
+// ---- Clear Response Section ----
+function clearResponse() {
+    document.getElementById('response').innerHTML = '';
 }
 
-function sendQueryRAG() {
-    const query = document.getElementById('query-rag').value;
+async function fetchQueryStatus(query_id) {
+    try {
+        const response = await fetch(`/api/query_status?query_id=${query_id}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    fetch('/api/query_rag', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
+        const data = await response.json();
+        const { status, response: queryResponse } = data; // Rename 'response' to avoid shadowing
 
-        for (let i = 0; i < data.length; i++) {
-            const pageContent = data[i].page_content;
-            const metadataSource = data[i].metadata_source;
-            document.getElementById('response-rag').value += '\nPage Content: ' + pageContent;
-            document.getElementById('response-rag').value += '\nMetadata Source: ' + metadataSource;
-            document.getElementById('response-rag').value += '\n\n';
+        if (status === "completed") {
+            updateResponseArea('response', queryResponse);
+            document.getElementById('loading').style.display = 'none';
+            clearInterval(intervalId);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    } catch (error) {
+        handleError('Error fetching query status:', error, 'response');
+    }
 }
 
-function summarizeSources() {
+// ---- Common Functions ----
+function updateResponseArea(elementId, text) {
+    const responseElement = document.getElementById(elementId);
+    const newText = document.createTextNode(text + '\n\n');
+    responseElement.insertBefore(newText, responseElement.firstChild); // Add to top
+}
+
+function handleError(message, error, responseElementId) {
+    console.error(message, error);
+    document.getElementById('loading').style.display = 'none';
+    updateResponseArea(responseElementId, `Error: ${error.message}`);
+}
+
+// ---- Summarize based on sources ----
+
+async function summarizeSources() {
     const sources = document.getElementById('sources').value;
 
-    fetch('/api/metadata_summary', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sources }),
-    })
-    .then(response => {
+    try {
+        const response = await fetch('/api/metadata_summary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sources }),
+        });
+
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        return response.text();
-    })
-    .then(data => {
+
+        const data = await response.text();
         document.getElementById('text-summary').value = data;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    } catch (error) {
+        handleError('Error summarizing sources:', error, 'text-summary'); // Updated error handling
+    }
 }
 
-// function submitLink() {
-//     const link = document.getElementById('link').value;
+// ---- Link Submission Section ----
 
-//     fetch('/api/process_url', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({ url: link }),
-//     })
-//     .then(response => {
-//         if (!response.ok) {
-//             throw new Error('Network response was not ok');
-//         }
-//         return response.json();
-//     })
-//     .then(data => {
-//         console.log('URL processed successfully');
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//     });
-// }
+async function submitLink() {
+    const link = document.getElementById('link').value;
+
+    try {
+        const response = await fetch('/api/submit_link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ link }),
+        });
+
+        if (response.ok) {
+            alert('Link submitted successfully!');
+        } else {
+            alert('Error submitting link.');
+        }
+    } catch (error) {
+        console.error('Error submitting link:', error);
+        alert('An error occurred while submitting the link.');
+    }
+}

@@ -1,15 +1,13 @@
 from langchain_community.llms import Ollama
 import yaml
 import logging
-import os
 
-log_file = os.path.join(os.path.dirname(__file__), 'ratatoskr.log')
-logging.basicConfig(level=logging.INFO, filemode='a', filename=log_file,
-                    format='%(asctime)s - %(levelname)s - %(message)s - Source: %(filename)s:%(lineno)d')
+from logging_config import logger
+from config_utils import load_config
 
 class LLMHandler:
     def __init__(self, config_file='config.yaml'):
-        self.config = self.load_config(config_file)
+        self.config = load_config(config_file)
         self.ollama_session = None
         
     @staticmethod
