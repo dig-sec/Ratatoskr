@@ -1,4 +1,6 @@
-# Ratatoskr: A Comprehensive Information Retrieval and Knowledge Management Platform
+# Ratatoskr
+
+A Comprehensive Information Retrieval and Knowledge Management Platform
 
 ## Overview
 
@@ -21,39 +23,6 @@ Ratatoskr is a powerful tool designed to streamline information retrieval and kn
 - **LangChain:** A framework for developing applications powered by language models.
 - **Hugging Face Embeddings:** Embeddings models used for semantic search and similarity calculations.
 - **YAML:** Used for storing configuration settings.
-
-## Installation and Setup
-
-1. **Clone the Repository:** 
-   ```bash
-   git clone <repository-url>
-   ```
-2. **Create a Virtual Environment:**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Configure:**
-   - Update `config.yaml` with your Elasticsearch connection details, Ollama model settings, and other preferences.
-5. **Start the Server:**
-   ```bash
-   python src/main.py
-   ```
-
-## API Endpoints
-
-- **`/api/query` (POST):** Submit an interactive query.
-- **`/api/query_status` (GET):** Get the status of a query.
-- **`/api/query_rag` (POST):** Query the RAG database.
-- **`/api/metadata_summary` (POST):** Get metadata summaries.
-- **`/api/upload_file` (POST):** Upload a file for processing.
-- **`/api/process_url` (POST):** Process a URL for RAG.
-- **`/store_document_in_elastic` (POST):** Store a document in Elasticsearch.
-- **`/query_vector_in_elastic` (POST):** Query Elasticsearch using a vector.
 
 ## Contributing
 
