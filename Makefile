@@ -2,6 +2,7 @@
 
 VENV := .venv
 VENV_ACTIVATE := . $(VENV)/bin/activate
+PLAYWRIGHT := $(VENV)/bin/playwright
 
 # Virtual environment setup 
 .PHONY: venv
@@ -14,9 +15,18 @@ $(VENV)/bin/activate: requirements.txt
 	$(VENV_ACTIVATE) && python -m spacy download en_core_web_sm
 	touch $(VENV)/bin/activate
 
+# Playwright setup
+.PHONY: playwright
+playwright: $(PLAYWRIGHT)
+
+$(PLAYWRIGHT): venv
+	$(VENV_ACTIVATE) && pip install playwright
+	$(VENV_ACTIVATE) && playwright install
+	touch $(PLAYWRIGHT)
+
 # Project-specific commands
 .PHONY: install
-install: venv
+install: venv playwright
 	$(VENV_ACTIVATE) && python -m pip install -e .
 
 .PHONY: lint
@@ -41,6 +51,3 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
-.PHONY: docs
-docs: venv
-	$(VENV_ACTIVATE) && mkdocs serve  # Install mkdocs if needed
