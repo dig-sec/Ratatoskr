@@ -21,3 +21,6 @@ beautifulsoup4
 
 # Machine Learning
 scikit-learn
+
+# AsyncChromiumLoader
+playwright
