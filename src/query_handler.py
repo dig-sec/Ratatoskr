@@ -3,6 +3,7 @@ import datetime
 
 from flask import abort, jsonify, request
 from elasticsearch_integration import ElasticsearchIntegration
+from rag_processor import RagProcessor
 from llm_handler import LLMHandler
 
 from logging_config import logger
@@ -102,6 +103,10 @@ def process_query(query_id: str, user_query: str, model: str, user: str, session
             "query": {"match": {"query_id": query_id}}
         }
         elastic_connection.update_query(update_query)
+
+        # Store response in rag_database
+        rag_handler = RagProcessor()
+        rag_handler.process_string_to_vector_db(response)
 
     except Exception as e:
         logger.exception("Exception occurred while processing query:", exc_info=True)

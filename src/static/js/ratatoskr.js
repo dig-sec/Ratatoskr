@@ -31,7 +31,7 @@ async function sendQuery() {
         };
 
         try {
-            const response = await fetch('/api/query', {
+            const response = await fetch('/api/dialog', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -47,7 +47,7 @@ async function sendQuery() {
             handleError('Error sending query:', error, 'response');
         }
     } else {
-        const maxResults = parseInt(document.getElementById('max-results').value) || 10;
+        const maxResults = parseInt(document.getElementById('max_results').value) || 10;
         const queryText = document.getElementById('query').value;
 
         try {
@@ -56,7 +56,7 @@ async function sendQuery() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     query: queryText,
-                    max_results: maxResults
+                    max_results: maxResults,
                 })
             });
             if (!response.ok) throw new Error('Network response was not ok');
@@ -141,7 +141,7 @@ async function summarizeSources() {
 
 // ---- Link Submission Section ----
 
-async function submitLink() {
+async function submit_link() {
     const link = document.getElementById('link').value;
 
     try {

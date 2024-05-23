@@ -29,16 +29,16 @@ class Ratatoskr:
         self.app.route('/favicon.ico', methods=['GET'])(self.favicon)
         
         # Query
-        self.app.route('/api/query', methods=['POST'])(self.interactive_query)
+        self.app.route('/api/dialog', methods=['POST'])(self.dialog)
         self.app.route('/api/query_status', methods=['GET'])(self.query_status)
         self.app.route('/api/vector_search', methods=['POST'])(self.vector_search)
         self.app.route('/api/string_search', methods=['POST'])(self.string_search)
         self.app.route('/api/metadata_summary', methods=['POST'])(self.metadata_summary)
         
         # Ingest
-        # self.app.route('/store_vector', methods=['POST'])(store_vector_and_document(config=self.config))
+        # self.app.route('/api/store_vector', methods=['POST'])(self.store_vector)
         # self.app.route('/store_document', methods=['POST'])(store_document(config=self.config))
-        # self.app.route('/api/process_url', methods=['POST'])(self.process_rag_url)
+        self.app.route('/api/submit_link', methods=['POST'])(self.submit_link)
         # self.app.route('/api/upload_file', methods=['POST'])(self.upload_file)
 
     def run(self):
@@ -48,7 +48,7 @@ class Ratatoskr:
         return send_from_directory(os.path.join(self.app.root_path, 'static'),
         'favicon.ico',mimetype='image/vnd.microsoft.icon')
     
-    def interactive_query(self):
+    def dialog(self):
         if 'query' not in request.json:
             abort(400, description="Missing query in request")
         if 'model' not in request.json:
@@ -77,10 +77,10 @@ class Ratatoskr:
         # Return the query_id
         return jsonify(query_id=query_id)
 
-    def process_rag_url(self):
+    def submit_link(self):
         """Processes a URL for RAG (Retrieval Augmented Generation)."""
         try:
-            url = request.json.get('url')
+            url = request.json.get('link')
             if not url:
                 return jsonify({'error': 'Missing or invalid URL'}), 400
 
@@ -88,10 +88,9 @@ class Ratatoskr:
             parsed_url = urllib.parse.urlparse(url)
             if not all([parsed_url.scheme, parsed_url.netloc]):
                 return jsonify({'error': 'Invalid URL format'}), 400
-
-            rag_processor = RagProcessor(self.config)
-
+            
             try:
+                rag_processor = RagProcessor()
                 rag_processor.process_url(url)
             except Exception as rag_error:
                 logger.exception("Error within RagProcessor:", exc_info=True)
@@ -242,6 +241,8 @@ class Ratatoskr:
             except Exception as e:
                 logger.error(f"Error in query_text: {e}")
                 return jsonify({"error": "Internal server error"}), 500
+            finally:
+                elastic_connection.close_connection()
     
     def metadata_summary(self):
         if 'sources' not in request.json:
@@ -260,6 +261,24 @@ class Ratatoskr:
 
     def index(self):
         return render_template('index.html', model_options=self.config['ollama']['models'])
+
+    # def store_vector(self):
+    #     try:
+    #         if 'document' not in request.json:
+    #             abort(400, description="Missing document in request")
+
+    #         document = request.json['document']
+
+    #         elastic_connection = ElasticsearchIntegration(self.config)
+    #         result = elastic_connection.extract_and_store_documents_and_vectors(document)
+            
+    #         return jsonify({'result': result, 'message': 'Vector stored successfully'}), 201
+    #     except Exception as e:
+    #         logger.exception(f"Error storing vector: {e}")
+    #         return jsonify({'error': 'Failed to store vector'}), 500
+    #     finally:
+    #         elastic_connection.close_connection()
+
 
 if __name__ == '__main__':
     config_file = "config.yaml"
