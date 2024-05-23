@@ -57,7 +57,7 @@ class ElasticsearchIntegration:
         except Exception as e:
             logging.error(f"Failed to store documents and vectors: {e}")
             raise
-
+    
     def query_vector(self, query: str, k: int = 10) -> List[Dict[str, str]]:
         """Query vector from the database."""
         db = ElasticsearchStore(
@@ -98,7 +98,7 @@ class ElasticsearchIntegration:
         return results
 
     def store_document(self, document: Dict[str, str], index: Optional[str] = None) -> str:
-        """Store document in the database."""
+        """Store document in the database. Used by query status."""
         if index is None:
             index = self.config["ratatoskr"]["index"]
         result = self.store_text(index, document)
@@ -115,4 +115,5 @@ class ElasticsearchIntegration:
         if index is None:
             index = self.config["rag_database"]["index"]
         res = self.es.search(body=query, index=index)
+            
         return res["hits"]["hits"]
