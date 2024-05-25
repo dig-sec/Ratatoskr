@@ -1,6 +1,6 @@
 # Ratatoskr
 
-![Loading](src/static/images/ratatoskr_loading.gif)
+<img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 10px;" height="50%" width="50%">
 
 A Comprehensive Information Retrieval and Knowledge Management Platform
 
