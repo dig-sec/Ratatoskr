@@ -1,6 +1,8 @@
 # Ratatoskr
 
-<img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 10px;" height="50%" width="50%">
+<p align="center">
+    <img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 50%;" height="50%" width="50%">
+</p>
 
 A Comprehensive Information Retrieval and Knowledge Management Platform
 
