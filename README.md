@@ -1,7 +1,7 @@
 # Ratatoskr
 
 <p align="center">
-    <img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 50%;" height="50%" width="50%">
+    <img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 50%;" height="30%" width="30%">
 </p>
 
 A Comprehensive Information Retrieval and Knowledge Management Platform
@@ -24,7 +24,6 @@ Ratatoskr is a tool designed to streamline information retrieval and knowledge m
 - **Elasticsearch:** A distributed search and analytics engine for document and vector storage.
 - **LangChain:** A framework for developing applications powered by language models.
 - **Hugging Face Embeddings:** Embeddings models used for semantic search and similarity calculations.
-
 
 ## Contributing
 
