@@ -1,10 +1,10 @@
 # Ratatoskr
 
+A Comprehensive Information Retrieval and Knowledge Management Platform
+
 <p align="center">
     <img src="src/static/images/ratatoskr_loading.gif" alt="Loading" style="border-radius: 50%;" height="30%" width="30%">
 </p>
-
-A Comprehensive Information Retrieval and Knowledge Management Platform
 
 ## Overview
 
@@ -24,6 +24,51 @@ Ratatoskr is a tool designed to streamline information retrieval and knowledge m
 - **Elasticsearch:** A distributed search and analytics engine for document and vector storage.
 - **LangChain:** A framework for developing applications powered by language models.
 - **Hugging Face Embeddings:** Embeddings models used for semantic search and similarity calculations.
+
+## Installation
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone [https://github.com/](https://github.com/)<your-username>/ratatoskr.git
+   cd ratatoskr
+   ```
+   
+2. **Install Dependencies:**
+   ```bash
+   python3 -m venv .venv 
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. **(Optional) Docker Setup:**
+    If you prefer using Docker:
+   ```bash
+   docker build -t ratatoskr .
+   docker run -it --rm \
+      --name ratatoskr \
+      -p 6666:6666 \
+      -v $(pwd)/config.yaml:/app/config.yaml \
+      ratatoskr
+   ```
+
+4. **Configuration:**
+   * Rename `config_sample.yaml` to `config.yaml`.
+   * Update `config.yaml` with your specific settings.
+
+5. **Start Ratatoskr:**
+
+    - From Source:
+        ```bash
+        python src/main.py --config config.yaml
+        ```
+    - Using Docker:
+        ```bash
+        docker start ratatoskr
+        ```
+
+Now you can access Ratatoskr at `http://localhost:6666`.
+
 
 ## Contributing
 
