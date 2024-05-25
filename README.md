@@ -1,19 +1,19 @@
 # Ratatoskr
 
+![Loading](src/static/images/ratatoskr_loading.gif)
+
 A Comprehensive Information Retrieval and Knowledge Management Platform
 
 ## Overview
 
-Ratatoskr is a powerful tool designed to streamline information retrieval and knowledge management. It leverages advanced technologies to process, store, and retrieve information from diverse sources, including uploaded documents, URLs, and Elasticsearch databases.
+Ratatoskr is a tool designed to streamline information retrieval and knowledge management.
 
 ## Key Features
 
 - **Interactive Querying:** Ratatoskr enables users to interact with a language model (Ollama) through a user-friendly interface to ask questions and get answers. It supports both direct querying and retrieval-augmented generation (RAG) for more contextually relevant responses.
-- **Query Status Tracking:** Users can track the status of their queries to monitor progress.
 - **Metadata Summary Generation:** The system can summarize metadata information from various sources.
 - **Document Processing:** Ratatoskr can process both uploaded files (with type validation) and URLs (with RAG support) to extract information and store it for future retrieval.
 - **Elasticsearch Integration:** It seamlessly integrates with Elasticsearch to store and retrieve documents and vectors, enabling powerful search capabilities and similarity-based retrieval.
-- **Threading for Asynchronous Operations:**  Uses threading to handle long-running tasks like query processing, improving the responsiveness of the application.
 
 ## Technologies Used
 
@@ -22,7 +22,7 @@ Ratatoskr is a powerful tool designed to streamline information retrieval and kn
 - **Elasticsearch:** A distributed search and analytics engine for document and vector storage.
 - **LangChain:** A framework for developing applications powered by language models.
 - **Hugging Face Embeddings:** Embeddings models used for semantic search and similarity calculations.
-- **YAML:** Used for storing configuration settings.
+
 
 ## Contributing
 
