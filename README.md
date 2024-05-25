@@ -60,7 +60,7 @@ Ratatoskr is a tool designed to streamline information retrieval and knowledge m
 
     - From Source:
         ```bash
-        python src/main.py --config config.yaml
+        python src/main.py
         ```
     - Using Docker:
         ```bash
