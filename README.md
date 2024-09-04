@@ -45,7 +45,7 @@ Ratatoskr is a tool designed to streamline information retrieval and knowledge m
     If you prefer using Docker:
    ```bash
    docker build -t ratatoskr .
-   docker run -it --rm \
+   docker run -it \
       --name ratatoskr \
       -p 6666:6666 \
       -v $(pwd)/config.yaml:/app/config.yaml \
