@@ -14,7 +14,7 @@ langchain-elasticsearch
 sentence-transformers
 
 # Elasticsearch Integration
-elasticsearch>=8.0.0 
+elasticsearch>=8.0.0
 
 # Web Scraping and Text Processing
 beautifulsoup4

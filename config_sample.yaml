@@ -1,14 +1,13 @@
 ollama:
   url: http://127.0.0.1:11434/api/generate
   base_url: http://localhost:11434
-  model: llama3
+  model: llama3.1:latest
   models:
-    model1: llama3:70b
-    model2: llama3
-    model3: dolphin-mixtral
-    model4: mistral:latest
-    model5: llama2:13b
-    model6: codellama:13b
+    model1: llama3.1:latest
+    model2: codestral:latest
+    model3: deepseek-coder-v2:latest
+    model4: gemma2:latest
+    model5: dolphin-mixtral
 
 ratatoskr:
   index: ratatoskr

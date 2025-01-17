@@ -1,24 +1,14 @@
 from langchain_community.llms import Ollama
-import yaml
 import logging
 
 from logging_config import logger
 from config_utils import load_config
 
 class LLMHandler:
-    def __init__(self, config_file='config.yaml'):
-        self.config = load_config(config_file)
+    def __init__(self):
+        self.config = load_config()
         self.ollama_session = None
         
-    @staticmethod
-    def load_config(config_file):
-        try:
-            with open(config_file, 'r') as stream:
-                return yaml.safe_load(stream)
-        except (FileNotFoundError, yaml.YAMLError) as e:
-            logging.error(f"Error loading config: {e}")
-            return None
-    
     def init_ollama_session(self, model):
         if self.config is None:
             logging.error("Configuration not loaded. Cannot initialize Ollama session.")

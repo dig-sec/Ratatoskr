@@ -1,5 +1,6 @@
 import os
-import threading
+#import threading
+from concurrent.futures import ThreadPoolExecutor
 import uuid
 import urllib.parse
 from flask import Flask, request, render_template, send_from_directory, jsonify, abort
@@ -7,7 +8,7 @@ from werkzeug.utils import secure_filename
 import logging
 
 # Local modules
-from query_handler import process_query, query_current_status, query_rag_documents, query_metadata_source_documents
+from query_handler import process_query, query_current_status, query_rag_documents, query_metadata_source_documents, process_query_safe
 from rag_processor import RagProcessor
 from elasticsearch_integration import ElasticsearchIntegration
 
@@ -15,14 +16,17 @@ from logging_config import logger
 from config_utils import load_config
 
 class Ratatoskr:
-    def __init__(self, config_file, host='127.0.0.1', port=6666, debug=False):
+    def __init__(self, host='127.0.0.1', port=6666, debug=False):
         self.app = Flask(__name__)
         self.app.config['UPLOAD_FOLDER'] = '/upload'
         logging.basicConfig(filename="ratatoskr.log", level=logging.INFO)
-        self.config = load_config(config_file)
+        self.config = load_config()
         self.host = host
         self.port = port
         self.debug = debug
+
+        # Add the executor for background tasks
+        self.executor = ThreadPoolExecutor(max_workers=5)  # Adjust max_workers as needed
 
         # Core
         self.app.route('/', methods=['GET'])(self.index)
@@ -42,40 +46,41 @@ class Ratatoskr:
         # self.app.route('/api/upload_file', methods=['POST'])(self.upload_file)
 
     def run(self):
-        self.app.run(port=self.port, host=self.host, debug=self.debug)
+        try:
+            self.app.run(port=self.port, host=self.host, debug=self.debug)
+        finally:
+            self.executor.shutdown(wait=True)
 
     def favicon(self):
-        return send_from_directory(os.path.join(self.app.root_path, 'static'),
-        'favicon.ico',mimetype='image/vnd.microsoft.icon')
+        self.app = Flask(__name__, static_url_path='/static')
+        return self.app.send_static_file('favicon.ico')
     
     def dialog(self):
-        if 'query' not in request.json:
-            abort(400, description="Missing query in request")
-        if 'model' not in request.json:
-            abort(400, description="Missing model in request")
+        try:
+            data = request.json
+            if not data:
+                return jsonify({'error': 'Request body must be JSON'}), 400
 
-        # Load variables from request
-        query = request.json['query']
-        user = request.json['user']
-        session = request.json['session']
-        model = request.json['model']
+            query = data.get('query')
+            model = data.get('model')
+            if not query or not model:
+                return jsonify({'error': '"query" and "model" are required fields'}), 400
 
-        if 'query_id' not in request.json:
-            query_id = uuid.uuid4()
-        else:
-            query_id = request.json['query_id']
+            user = data.get('user', 'anonymous')
+            session = data.get('session', 'default_session')
+            query_id = data.get('query_id', str(uuid.uuid4()))
+            use_rag_database = data.get('use_rag_database', False)
 
-        if 'use_rag_database' not in request.json:
-            use_rag_database = False
-        else:
-            use_rag_database = request.json['use_rag_database']
+            logger.info(f"Processing query: {query_id}")
 
-        #process_query(query_id=query_id, query=query, model=model, user=user, session=session, use_rag_database=use_rag_database)
-        thread = threading.Thread(target=process_query, args=(query_id, query, model, user, session, use_rag_database))
-        thread.start()
+            # Submit to the executor for background processing
+            #self.executor.submit(process_query, query_id, query, model, user, session, use_rag_database)
+            self.executor.submit(process_query_safe, query_id, query, model, user, session, use_rag_database)
 
-        # Return the query_id
-        return jsonify(query_id=query_id)
+            return jsonify(query_id=query_id), 200
+        except Exception as e:
+            logger.exception(f"Error in dialog endpoint: {e}")
+            return jsonify({'error': 'Internal server error'}), 500
 
     def submit_link(self):
         """Processes a URL for RAG (Retrieval Augmented Generation)."""
@@ -280,14 +285,6 @@ class Ratatoskr:
     #         elastic_connection.close_connection()
 
 
-if __name__ == '__main__':
-    config_file = "config.yaml"
-    # Load config using the static method within the class
-    config = load_config(config_file)  
-    
-    if config is None:
-        logger.error("Invalid or missing configuration. Exiting.")
-        exit(1)
-        
-    ratatoskr_instance = Ratatoskr(host='0.0.0.0', port=6666, debug=False, config_file=config_file)
+if __name__ == '__main__':       
+    ratatoskr_instance = Ratatoskr(host='0.0.0.0', port=6666, debug=False)
     ratatoskr_instance.run()
